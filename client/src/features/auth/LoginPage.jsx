@@ -16,12 +16,15 @@ const schema = z.object({
 });
 
 const DEMO_ACCOUNTS = [
-  { role: 'Super Admin', email: 'superadmin@demo.com', hint: 'Full access incl. team' },
-  { role: 'Admin', email: 'admin@demo.com', hint: 'Edit products & orders' },
-  { role: 'Analyst', email: 'analyst@demo.com', hint: 'View + export' },
-  { role: 'Viewer', email: 'viewer@demo.com', hint: 'Read-only' },
+  { role: 'Super Admin', key: 'super_admin', email: 'superadmin@demo.com', hint: 'All dashboards · export · edit · manage team' },
+  { role: 'Admin', key: 'admin', email: 'admin@demo.com', hint: 'All dashboards · export · edit products & orders' },
+  { role: 'Analyst', key: 'analyst', email: 'analyst@demo.com', hint: 'All dashboards · CSV export' },
+  { role: 'Viewer', key: 'viewer', email: 'viewer@demo.com', hint: 'All dashboards · read-only' },
 ];
-const DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
+const ROLE_COLORS = { super_admin: '#4318FF', admin: '#3965FF', analyst: '#05CD99', viewer: '#A3AED0' };
+// Demo role logins are shown unless explicitly disabled (VITE_DEMO_MODE=false),
+// so a deployment without the variable still offers the role-based demo.
+const DEMO = String(import.meta.env.VITE_DEMO_MODE ?? 'true').trim().toLowerCase() !== 'false';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -124,12 +127,16 @@ export default function LoginPage() {
 
           {DEMO && (
             <div className="mt-8">
-              <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wide text-muted">Demo accounts · password “Password123”</p>
-              <div className="grid grid-cols-2 gap-2">
+              <p className="mb-1 text-center text-xs font-semibold uppercase tracking-wide text-muted">Sign in as a demo role</p>
+              <p className="mb-3 text-center text-[11px] text-muted">Click a role to fill the form · password “Password123” · permissions are enforced by the API</p>
+              <div className="grid grid-cols-2 gap-2" role="group" aria-label="Demo roles">
                 {DEMO_ACCOUNTS.map((a) => (
-                  <button key={a.email} type="button" onClick={() => fill(a.email)} className="rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-brand/50 hover:bg-brand-soft/40 focus-ring">
-                    <p className="text-sm font-bold text-ink">{a.role}</p>
-                    <p className="text-[11px] text-muted">{a.hint}</p>
+                  <button key={a.email} type="button" onClick={() => fill(a.email)} data-role={a.key} className="rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-brand/50 hover:bg-brand-soft/40 focus-ring">
+                    <p className="flex items-center gap-2 text-sm font-bold text-ink">
+                      <span className="h-2 w-2 rounded-full" style={{ background: ROLE_COLORS[a.key] }} />
+                      {a.role}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-muted">{a.hint}</p>
                   </button>
                 ))}
               </div>
