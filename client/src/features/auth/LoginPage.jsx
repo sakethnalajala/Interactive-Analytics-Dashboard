@@ -25,6 +25,8 @@ const ROLE_COLORS = { super_admin: '#4318FF', admin: '#3965FF', analyst: '#05CD9
 // Demo role logins are shown unless explicitly disabled (VITE_DEMO_MODE=false),
 // so a deployment without the variable still offers the role-based demo.
 const DEMO = String(import.meta.env.VITE_DEMO_MODE ?? 'true').trim().toLowerCase() !== 'false';
+const BUILD = { sha: typeof __BUILD_SHA__ !== 'undefined' ? __BUILD_SHA__ : 'dev', time: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '' };
+if (typeof window !== 'undefined') console.info(`Nova Analytics build ${BUILD.sha} (${BUILD.time}) · demo roles: ${DEMO ? 'shown' : 'hidden (VITE_DEMO_MODE=false)'}`);
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -148,6 +150,7 @@ export default function LoginPage() {
               Back to home
             </Link>
           </p>
+          <p className="mt-2 text-center text-[10px] text-muted/60" title={BUILD.time}>build {BUILD.sha}{!DEMO && ' · demo roles disabled by VITE_DEMO_MODE'}</p>
         </div>
       </section>
     </div>

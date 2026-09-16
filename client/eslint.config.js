@@ -9,7 +9,7 @@ export default [
     files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2022,
-      globals: { ...globals.browser, ...globals.node, ...globals.vitest },
+      globals: { ...globals.browser, ...globals.node, ...globals.vitest, __BUILD_SHA__: "readonly", __BUILD_TIME__: "readonly" },
       parserOptions: { ecmaVersion: 'latest', ecmaFeatures: { jsx: true }, sourceType: 'module' },
     },
     plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
