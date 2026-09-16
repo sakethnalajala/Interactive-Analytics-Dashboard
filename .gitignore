@@ -1,11 +1,55 @@
+# ---- Dependencies
 node_modules/
-dist/
+
+# ---- Environment & secrets (real values live only in .env files; templates are committed)
 .env
+.env.*
 .env.local
 .env.*.local
-*.log
-.DS_Store
-.vercel
-coverage/
-.vite/
+.env.development
+.env.production
 .env.backup*
+!.env.example
+*.pem
+*.key
+
+# ---- Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Build output & caches
+dist/
+build/
+.vite/
+coverage/
+.nyc_output/
+.cache/
+*.tsbuildinfo
+
+# ---- Deployment platforms
+.vercel/
+.vercel
+.render/
+
+# ---- OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Editors / IDEs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ---- Database dumps / temp
+dump/
+*.bson
+*.bson.gz
+tmp/
+temp/
