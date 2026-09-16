@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import { env } from './config/env.js';
+import { env, isAllowedOrigin } from './config/env.js';
 import { connectDB } from './config/db.js';
 import routes from './routes/index.js';
 import { apiLimiter } from './middleware/rateLimit.js';
@@ -21,7 +21,9 @@ export function createApp() {
     cors({
       origin(origin, cb) {
         // Allow same-origin / server-to-server (no Origin header) and configured client origins
-        if (!origin || env.clientOrigins.includes(origin)) return cb(null, true);
+        if (!origin || isAllowedOrigin(origin)) return cb(null, true);
+        // Surface the rejected origin in server logs so CLIENT_URL can be corrected quickly
+        if (!env.isTest) console.warn(`[cors] rejected origin ${origin} — allowed: ${env.clientOrigins.join(', ') || '(none)'}`);
         cb(ApiError.forbidden(`Origin ${origin} is not allowed`));
       },
       credentials: true,

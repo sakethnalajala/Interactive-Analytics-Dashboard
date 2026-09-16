@@ -55,7 +55,11 @@ export function normaliseError(error) {
     return Object.assign(new Error(e.message), { status: error.response.status, code: e.code, details: e.details });
   }
   if (error?.code === 'ECONNABORTED') return Object.assign(new Error('The request timed out. Please try again.'), { status: 0, code: 'TIMEOUT' });
-  if (!error?.response) return Object.assign(new Error('Cannot reach the server. Check your connection.'), { status: 0, code: 'NETWORK' });
+  if (!error?.response) {
+    // No HTTP response at all: offline, wrong VITE_API_URL, or a CORS preflight rejected by the API (CLIENT_URL mismatch).
+    const host = (() => { try { return new URL(API_BASE, window.location.origin).host; } catch { return API_BASE; } })();
+    return Object.assign(new Error(`Cannot reach the API at ${host}. Check your connection, or the deployment's VITE_API_URL / CLIENT_URL (CORS) settings.`), { status: 0, code: 'NETWORK' });
+  }
   return Object.assign(new Error(error.message || 'Unexpected error'), { status: error.response?.status, code: 'UNKNOWN' });
 }
 

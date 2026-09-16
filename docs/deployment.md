@@ -53,7 +53,7 @@ If the Vercel project's **Root Directory** is set to `client`, Vercel reads **`c
 | Output directory | `dist` |
 | Env vars | `VITE_API_URL=https://<your-api-host>` (no trailing slash) · `VITE_DEMO_MODE=true` |
 
-On the API host set `CLIENT_URL=https://<project>.vercel.app` so CORS allows the dashboard, and `NODE_ENV=production` so the refresh cookie is sent cross-site (`SameSite=None; Secure`).
+On the API host set `CLIENT_URL` to the **exact origin you open in the browser** — scheme + host, no trailing slash or path (e.g. `https://<project>.vercel.app`). Several origins can be comma-separated and `*` is allowed in the host for preview deployments, e.g. `https://<project>.vercel.app,https://<project>-*-<team>.vercel.app`. A rejected origin is logged by the API as `[cors] rejected origin …`, and `GET /api/health` reports `allowedOrigins` and the running `commit`. This is required for CORS, and `NODE_ENV=production` so the refresh cookie is sent cross-site (`SameSite=None; Secure`).
 
 ## 3. Verify
 

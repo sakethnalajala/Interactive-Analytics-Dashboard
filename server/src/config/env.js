@@ -26,5 +26,21 @@ export const env = {
   ...parsed.data,
   isProd: parsed.data.NODE_ENV === 'production',
   isTest: parsed.data.NODE_ENV === 'test',
-  clientOrigins: parsed.data.CLIENT_URL.split(',').map((s) => s.trim()).filter(Boolean),
+  // Comma-separated origins. Trailing slashes/paths are stripped and matching is
+  // case-insensitive because a browser Origin header is always just scheme://host[:port].
+  // A "*" wildcard is allowed in the host, e.g. https://my-app-*.vercel.app for previews.
+  clientOrigins: parsed.data.CLIENT_URL.split(',')
+    .map((s) => s.trim().toLowerCase().replace(/^([a-z]+:\/\/[^/]+).*$/, '$1'))
+    .filter(Boolean),
 };
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const originMatchers = env.clientOrigins.map((p) =>
+  p.includes('*') ? new RegExp('^' + p.split('*').map(escapeRe).join('[a-z0-9-]*') + '$') : p,
+);
+
+/** True when a browser Origin header matches one of the configured CLIENT_URL entries. */
+export function isAllowedOrigin(origin) {
+  const o = String(origin).toLowerCase().replace(/\/+$/, '');
+  return originMatchers.some((m) => (m instanceof RegExp ? m.test(o) : m === o));
+}

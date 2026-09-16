@@ -3,6 +3,7 @@ import { asyncHandler as h } from '../utils/asyncHandler.js';
 import { authenticate, authorize, ROLE_GROUPS } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { authLimiter } from '../middleware/rateLimit.js';
+import { env } from '../config/env.js';
 import * as auth from '../controllers/authController.js';
 import * as analytics from '../controllers/analyticsController.js';
 import * as data from '../controllers/dataController.js';
@@ -18,7 +19,8 @@ const range = validate(s.rangeQuery, 'query');
 const id = validate(s.idParam, 'params');
 
 // ---- health
-router.get('/health', (_req, res) => res.json({ success: true, data: { status: 'ok', time: new Date().toISOString() } }));
+const COMMIT = (process.env.RENDER_GIT_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || 'dev').slice(0, 7);
+router.get('/health', (_req, res) => res.json({ success: true, data: { status: 'ok', time: new Date().toISOString(), commit: COMMIT, allowedOrigins: env.clientOrigins.length } }));
 
 // ---- auth (public)
 router.post('/auth/login', authLimiter, validate(s.loginSchema), h(auth.login));
