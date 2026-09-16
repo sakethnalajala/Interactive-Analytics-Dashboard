@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Design tokens (see docs/design-system.md). RGB triplets for Tailwind alpha support. */
+:root {
+  --bg: 244 247 254;
+  --surface: 255 255 255;
+  --surface-2: 247 249 252;
+  --border: 226 232 240;
+  --text: 27 37 89;
+  --text-muted: 105 122 155;
+  --brand: 67 24 255;
+  --brand-hover: 51 17 219;
+  --brand-soft: 238 235 255;
+  --success: 5 205 153;
+  --warning: 255 181 71;
+  --danger: 238 93 80;
+  --info: 57 101 255;
+  --chart-1: #4318ff;
+  --chart-2: #39b8ff;
+  --chart-3: #05cd99;
+  --chart-4: #ffb547;
+  --chart-5: #ee5d50;
+  --chart-6: #a3aed0;
+  --chart-grid: #e9edf7;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 11 20 55;
+  --surface: 17 28 68;
+  --surface-2: 27 37 75;
+  --border: 42 58 107;
+  --text: 244 247 254;
+  --text-muted: 163 174 208;
+  --brand: 117 81 255;
+  --brand-hover: 139 109 255;
+  --brand-soft: 42 37 96;
+  --chart-1: #7551ff;
+  --chart-6: #6b78a8;
+  --chart-grid: #263462;
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-bg text-ink font-sans text-sm;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  ::selection {
+    @apply bg-brand/20;
+  }
+  /* Subtle scrollbars that respect the theme */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--border)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-line;
+  }
+  input[type='date']::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+  }
+  .dark input[type='date']::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl2 bg-surface border border-line/70 shadow-card dark:shadow-none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .glass {
+    @apply bg-surface/75 backdrop-blur-xl border-line/60;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-0;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink placeholder:text-muted/70 focus-ring focus:border-brand/50 transition-colors;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-surface-2;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-ink/[.04] to-transparent animate-shimmer;
+  }
+  .scroll-x {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Recharts polish */
+.recharts-cartesian-axis-tick-value {
+  @apply fill-muted;
+  font-size: 11px;
+}
+.recharts-tooltip-cursor {
+  fill: rgb(var(--brand) / 0.06);
+}
+.recharts-legend-item-text {
+  @apply text-muted;
+  font-size: 12px;
+}
+.recharts-default-legend {
+  cursor: pointer;
+}
+.recharts-surface:focus,
+.recharts-wrapper:focus {
+  outline: none;
+}
