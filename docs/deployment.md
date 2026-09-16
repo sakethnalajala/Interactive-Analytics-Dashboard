@@ -41,6 +41,20 @@ Browser ──► https://<project>.vercel.app/            → client/dist (stat
 
 3. Deploy. Vercel installs workspaces from the root `package.json`, builds the client, and bundles `api/index.js` (which imports `server/src/app.js`) as a Node 20 function.
 
+
+## 2b. Vercel with Root Directory = `client` (frontend-only)
+
+If the Vercel project's **Root Directory** is set to `client`, Vercel reads **`client/vercel.json`** and deploys only the React build. The root `vercel.json` and `api/index.js` are ignored in this mode, so the Express API must run somewhere else (see §5 — Render / Railway).
+
+| Setting | Value |
+|---|---|
+| Framework preset | Vite |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Env vars | `VITE_API_URL=https://<your-api-host>` (no trailing slash) · `VITE_DEMO_MODE=true` |
+
+On the API host set `CLIENT_URL=https://<project>.vercel.app` so CORS allows the dashboard, and `NODE_ENV=production` so the refresh cookie is sent cross-site (`SameSite=None; Secure`).
+
 ## 3. Verify
 
 ```bash
