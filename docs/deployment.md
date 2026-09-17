@@ -57,15 +57,15 @@ On the API host set `CLIENT_URL` to the **exact origin you open in the browser**
 
 ## 2c. Demo accounts & passwords (Render / any API host)
 
-The login page's demo cards are served by ; nothing is hard-coded in the frontend. Give each role its own password with these API environment variables — at start-up (and via ) the API bcrypt-hashes them into the matching user records, revoking old sessions for rotated accounts:
+The login page's demo cards are served by `GET /api/auth/demo-accounts`; nothing is hard-coded in the frontend. Give each role its own password with these API environment variables — at start-up (and via `npm run demo:sync`) the API bcrypt-hashes them into the matching user records, revoking old sessions for rotated accounts:
 
 | Variable | Purpose |
 |---|---|
-|  |  (default) shows the cards;  hides them |
-|  | password for superadmin@demo.com |
-|  | password for admin@demo.com |
-|  | password for analyst@demo.com |
-|  | password for viewer@demo.com |
+| `DEMO_LOGIN_ENABLED` | `true` (default) shows the cards; `false` hides them |
+| `DEMO_PASSWORD_SUPER_ADMIN` | password for superadmin@demo.com |
+| `DEMO_PASSWORD_ADMIN` | password for admin@demo.com |
+| `DEMO_PASSWORD_ANALYST` | password for analyst@demo.com |
+| `DEMO_PASSWORD_VIEWER` | password for viewer@demo.com |
 
 In production, roles whose variable is unset are shown **without** a password (the card fills the email only). Any signed-in user can change their own password under **Profile → Change password**; a Super Admin can reset anyone's under **Settings → Team**.
 
