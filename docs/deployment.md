@@ -55,6 +55,20 @@ If the Vercel project's **Root Directory** is set to `client`, Vercel reads **`c
 
 On the API host set `CLIENT_URL` to the **exact origin you open in the browser** — scheme + host, no trailing slash or path (e.g. `https://<project>.vercel.app`). Several origins can be comma-separated and `*` is allowed in the host for preview deployments, e.g. `https://<project>.vercel.app,https://<project>-*-<team>.vercel.app`. A rejected origin is logged by the API as `[cors] rejected origin …`, and `GET /api/health` reports `allowedOrigins` and the running `commit`. This is required for CORS, and `NODE_ENV=production` so the refresh cookie is sent cross-site (`SameSite=None; Secure`).
 
+## 2c. Demo accounts & passwords (Render / any API host)
+
+The login page's demo cards are served by ; nothing is hard-coded in the frontend. Give each role its own password with these API environment variables — at start-up (and via ) the API bcrypt-hashes them into the matching user records, revoking old sessions for rotated accounts:
+
+| Variable | Purpose |
+|---|---|
+|  |  (default) shows the cards;  hides them |
+|  | password for superadmin@demo.com |
+|  | password for admin@demo.com |
+|  | password for analyst@demo.com |
+|  | password for viewer@demo.com |
+
+In production, roles whose variable is unset are shown **without** a password (the card fills the email only). Any signed-in user can change their own password under **Profile → Change password**; a Super Admin can reset anyone's under **Settings → Team**.
+
 ## 3. Verify
 
 ```bash
