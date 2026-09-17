@@ -7,6 +7,7 @@
  * password by changing the variable and restarting — no manual DB edits. Outside production
  * a shared fallback keeps `npm run dev` working with zero configuration.
  */
+import crypto from 'node:crypto';
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 
@@ -19,11 +20,24 @@ export const DEMO_ACCOUNTS = [
   { role: 'viewer', label: 'Viewer', email: 'viewer@demo.com', name: 'Emma Laurent', jobTitle: 'Marketing Associate', hint: 'All dashboards · read-only', envKey: 'DEMO_PASSWORD_VIEWER' },
 ];
 
-/** The configured password for a demo role, or null when none is published (production without env vars). */
+/**
+ * Production fallback when DEMO_PASSWORD_<ROLE> is not set: a per-role password derived from the
+ * server's own secret (HMAC-SHA256, domain-separated). It is distinct per role and per deployment,
+ * never stored in the repo or the frontend, cannot be reversed to reveal the secret, and rotates
+ * automatically whenever JWT_REFRESH_SECRET changes. Format satisfies the password policy.
+ */
+function derivedDemoPassword(role) {
+  const digest = crypto.createHmac('sha256', env.JWT_REFRESH_SECRET).update(`nova-demo-password:${role}`).digest('hex');
+  const label = role.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join('');
+  return `Demo-${label}-${digest.slice(0, 10)}`;
+}
+
+/** Resolution order: explicit env var → derived (production) → shared dev fallback. */
 export function demoPasswordFor(role) {
   const account = DEMO_ACCOUNTS.find((a) => a.role === role);
   if (!account) return null;
-  return env[account.envKey] || (env.isProd ? null : DEV_FALLBACK_PASSWORD);
+  if (env[account.envKey]) return env[account.envKey];
+  return env.isProd ? derivedDemoPassword(role) : DEV_FALLBACK_PASSWORD;
 }
 
 /** Shape returned to the login page. Passwords are included only when the demo login is enabled. */

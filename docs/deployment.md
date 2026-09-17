@@ -67,7 +67,7 @@ The login page's demo cards are served by `GET /api/auth/demo-accounts`; nothing
 | `DEMO_PASSWORD_ANALYST` | password for analyst@demo.com |
 | `DEMO_PASSWORD_VIEWER` | password for viewer@demo.com |
 
-In production, roles whose variable is unset are shown **without** a password (the card fills the email only). Any signed-in user can change their own password under **Profile → Change password**; a Super Admin can reset anyone's under **Settings → Team**.
+In production, a role whose variable is unset gets a password **derived from the API secret** (HMAC of the role keyed by JWT_REFRESH_SECRET — distinct per role and deployment, never stored in the repo), so the demo works with zero configuration; set the variable to choose your own value, or rotate JWT_REFRESH_SECRET to rotate them all. Any signed-in user can change their own password under **Profile → Change password**; a Super Admin can reset anyone's under **Settings → Team**.
 
 ## 3. Verify
 
