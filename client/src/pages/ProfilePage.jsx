@@ -23,6 +23,24 @@ const passwordSchema = z
   .refine((d) => d.newPassword === d.confirm, { message: 'Passwords do not match', path: ['confirm'] })
   .refine((d) => d.newPassword !== d.currentPassword, { message: 'Choose a different password', path: ['newPassword'] });
 
+/** 0–4 strength score for the meter (advisory only; the API enforces the rules). */
+function passwordStrength(pw = '') {
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (pw.length >= 12) s++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
+  if (/\d/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  return Math.min(4, s);
+}
+const STRENGTH = [
+  ['Too short', 'bg-danger'],
+  ['Weak', 'bg-danger'],
+  ['Fair', 'bg-warning'],
+  ['Good', 'bg-info'],
+  ['Strong', 'bg-success'],
+];
+
 const COLORS = ['#4318FF', '#39B8FF', '#05CD99', '#FFB547', '#EE5D50', '#6C63FF', '#F97316', '#0EA5E9', '#A855F7', '#14B8A6'];
 
 export default function ProfilePage() {
@@ -34,6 +52,8 @@ export default function ProfilePage() {
   const profile = useForm({ resolver: zodResolver(profileSchema), defaultValues: { name: user?.name, jobTitle: user?.jobTitle } });
   useEffect(() => profile.reset({ name: user?.name, jobTitle: user?.jobTitle || '' }), [user]); // eslint-disable-line react-hooks/exhaustive-deps
   const pw = useForm({ resolver: zodResolver(passwordSchema) });
+  const newPw = pw.watch('newPassword') || '';
+  const strength = passwordStrength(newPw);
 
   const saveProfile = (v) => update.mutate(v, { onSuccess: () => toast.success('Profile updated'), onError: (e) => toast.error(e.message) });
   const savePassword = async (v) => {
@@ -117,7 +137,19 @@ export default function ProfilePage() {
               </div>
               {pw.formState.errors.currentPassword && <p className="mt-1 text-xs text-danger">{pw.formState.errors.currentPassword.message}</p>}
             </div>
-            <Input id="new" label="New password" type={show ? 'text' : 'password'} autoComplete="new-password" error={pw.formState.errors.newPassword?.message} hint="8+ characters with a letter and a number." {...pw.register('newPassword')} />
+            <div>
+              <Input id="new" label="New password" type={show ? 'text' : 'password'} autoComplete="new-password" error={pw.formState.errors.newPassword?.message} hint="8+ characters with a letter and a number. Longer, mixed-case with symbols is stronger." {...pw.register('newPassword')} />
+              {newPw && (
+                <div className="mt-2" aria-live="polite">
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3].map((i) => (
+                      <span key={i} className={cn('h-1.5 flex-1 rounded-full bg-line transition-colors', i < strength && STRENGTH[strength][1])} />
+                    ))}
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted">Strength: {STRENGTH[strength][0]}</p>
+                </div>
+              )}
+            </div>
             <Input id="confirm" label="Confirm new password" type={show ? 'text' : 'password'} autoComplete="new-password" error={pw.formState.errors.confirm?.message} {...pw.register('confirm')} />
             <div className="flex justify-end sm:col-span-2">
               <Button type="submit" variant="secondary" loading={changePw.isPending}>Update password</Button>

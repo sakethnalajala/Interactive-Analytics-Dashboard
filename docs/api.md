@@ -47,7 +47,7 @@ Error codes: `BAD_REQUEST` (400) · `UNAUTHORIZED` / `TOKEN_EXPIRED` / `TOKEN_IN
 | GET | `/reports/:type/export` | analyst+ | CSV using the same columns (list reports drop the 2,000-row preview cap) |
 | GET | `/profile` | any | Current profile |
 | PATCH | `/profile` | any | `name jobTitle avatarColor preferences{theme,defaultDateRange,compactTables}` |
-| PATCH | `/profile/password` | any | `{ currentPassword, newPassword }` — signs out other devices |
+| PATCH | `/auth/password` | any | `{ currentPassword, newPassword }` — bcrypt-verifies the current password, stores a new bcrypt hash, keeps this device signed in and revokes every other device. Rate-limited. (`/profile/password` is a legacy alias that revokes all devices.) |
 | GET | `/settings` | any | Organisation settings |
 | PATCH | `/settings` | admin+ | `orgName currency timezone fiscalYearStartMonth lowStockThreshold weekStartsOn` |
 | GET | `/settings/users` | super_admin | Team list |

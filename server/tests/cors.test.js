@@ -6,7 +6,7 @@ const { env, isAllowedOrigin } = await import('../src/config/env.js');
 
 describe('CORS origin matching', () => {
   it('normalises trailing slashes and case', () => {
-    expect(env.clientOrigins).toEqual(['https://nova-dashboard.vercel.app', 'https://nova-dashboard-*-sakeths-projects.vercel.app', 'http://localhost:5180']);
+    expect(env.clientOrigins.slice(0, 3)).toEqual(['https://nova-dashboard.vercel.app', 'https://nova-dashboard-*-sakeths-projects.vercel.app', 'http://localhost:5180']);
     expect(isAllowedOrigin('https://nova-dashboard.vercel.app')).toBe(true);
     expect(isAllowedOrigin('https://NOVA-dashboard.vercel.app')).toBe(true);
     expect(isAllowedOrigin('http://localhost:5180')).toBe(true);

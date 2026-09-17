@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { login } from './useAuth';
+import { get, API_BASE } from '@/lib/api';
 import { Button, Input } from '@/components/ui';
 import { Logo } from '@/components/layout/Sidebar';
 import { ThemeToggle } from '@/components/layout/AppLayout';
@@ -15,24 +16,30 @@ const schema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-const DEMO_ACCOUNTS = [
-  { role: 'Super Admin', key: 'super_admin', email: 'superadmin@demo.com', hint: 'All dashboards · export · edit · manage team' },
-  { role: 'Admin', key: 'admin', email: 'admin@demo.com', hint: 'All dashboards · export · edit products & orders' },
-  { role: 'Analyst', key: 'analyst', email: 'analyst@demo.com', hint: 'All dashboards · CSV export' },
-  { role: 'Viewer', key: 'viewer', email: 'viewer@demo.com', hint: 'All dashboards · read-only' },
-];
 const ROLE_COLORS = { super_admin: '#4318FF', admin: '#3965FF', analyst: '#05CD99', viewer: '#A3AED0' };
 // Demo role logins are shown unless explicitly disabled (VITE_DEMO_MODE=false),
 // so a deployment without the variable still offers the role-based demo.
+// Demo cards are served by the API (GET /auth/demo-accounts) so no credentials live in this bundle.
+// VITE_DEMO_MODE=false hides them client-side regardless of the API setting.
 const DEMO = String(import.meta.env.VITE_DEMO_MODE ?? 'true').trim().toLowerCase() !== 'false';
+// One request per page load (React StrictMode runs effects twice in development).
+let demoAccountsPromise = null;
+const loadDemoAccounts = () => (demoAccountsPromise ||= get('/auth/demo-accounts').catch((e) => { demoAccountsPromise = null; throw e; }));
 const BUILD = { sha: typeof __BUILD_SHA__ !== 'undefined' ? __BUILD_SHA__ : 'dev', time: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '' };
-if (typeof window !== 'undefined') console.info(`Nova Analytics build ${BUILD.sha} (${BUILD.time}) · demo roles: ${DEMO ? 'shown' : 'hidden (VITE_DEMO_MODE=false)'}`);
+if (typeof window !== 'undefined') console.info(`Nova Analytics build ${BUILD.sha} (${BUILD.time}) · API ${API_BASE} · demo cards ${DEMO ? 'enabled' : 'disabled by VITE_DEMO_MODE'}`);
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [show, setShow] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [demo, setDemo] = useState({ status: 'loading', accounts: [] });
+  useEffect(() => {
+    if (!DEMO) return setDemo({ status: 'off', accounts: [] });
+    loadDemoAccounts()
+      .then((d) => setDemo({ status: d.enabled && d.accounts.length ? 'ready' : 'off', accounts: d.accounts }))
+      .catch((e) => setDemo({ status: 'error', accounts: [], error: e.message }));
+  }, []);
   const {
     register,
     handleSubmit,
@@ -50,10 +57,10 @@ export default function LoginPage() {
     }
   };
 
-  const fill = (email) => {
-    setValue('email', email, { shouldValidate: true });
-    setValue('password', 'Password123', { shouldValidate: true });
-    setServerError('');
+  const fill = (a) => {
+    setValue('email', a.email, { shouldValidate: true });
+    setValue('password', a.password || '', { shouldValidate: !!a.password });
+    setServerError(a.password ? '' : 'The password for this demo account is not published — ask an administrator.');
   };
 
   return (
@@ -127,22 +134,28 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {DEMO && (
+          {demo.status === 'ready' && (
             <div className="mt-8">
-              <p className="mb-1 text-center text-xs font-semibold uppercase tracking-wide text-muted">Sign in as a demo role</p>
-              <p className="mb-3 text-center text-[11px] text-muted">Click a role to fill the form · password “Password123” · permissions are enforced by the API</p>
+              <p className="mb-1 text-center text-xs font-semibold uppercase tracking-wide text-muted">Demonstration credentials</p>
+              <p className="mb-3 text-center text-[11px] text-muted">Sample accounts for evaluating the dashboard. Click a role to fill the form · permissions are enforced by the API.</p>
               <div className="grid grid-cols-2 gap-2" role="group" aria-label="Demo roles">
-                {DEMO_ACCOUNTS.map((a) => (
-                  <button key={a.email} type="button" onClick={() => fill(a.email)} data-role={a.key} className="rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-brand/50 hover:bg-brand-soft/40 focus-ring">
+                {demo.accounts.map((a) => (
+                  <button key={a.email} type="button" onClick={() => fill(a)} data-role={a.role} className="rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-brand/50 hover:bg-brand-soft/40 focus-ring">
                     <p className="flex items-center gap-2 text-sm font-bold text-ink">
-                      <span className="h-2 w-2 rounded-full" style={{ background: ROLE_COLORS[a.key] }} />
-                      {a.role}
+                      <span className="h-2 w-2 rounded-full" style={{ background: ROLE_COLORS[a.role] }} />
+                      {a.label}
                     </p>
                     <p className="mt-0.5 text-[11px] leading-snug text-muted">{a.hint}</p>
+                    <p className="mt-1 truncate text-[11px] font-medium text-ink/80">{a.email}</p>
                   </button>
                 ))}
               </div>
             </div>
+          )}
+          {demo.status === 'error' && (
+            <p role="status" className="mt-6 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-center text-xs text-ink">
+              Demo accounts unavailable: {demo.error}
+            </p>
           )}
           <p className="mt-8 text-center text-xs text-muted">
             Accounts are provisioned by an administrator.{' '}

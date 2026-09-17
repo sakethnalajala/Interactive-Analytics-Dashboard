@@ -58,4 +58,4 @@ export function useUpdateProfile() {
   const setUser = useAuthStore((s) => s.setUser);
   return useMutation({ mutationFn: (body) => patch('/profile', body), onSuccess: (data) => setUser(data.user) });
 }
-export const useChangePassword = () => useMutation({ mutationFn: (body) => patch('/profile/password', body) });
+export const useChangePassword = () => useMutation({ mutationFn: (body) => patch('/auth/password', body) });

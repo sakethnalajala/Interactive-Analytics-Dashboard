@@ -4,6 +4,7 @@ import { authenticate, authorize, ROLE_GROUPS } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { authLimiter } from '../middleware/rateLimit.js';
 import { env } from '../config/env.js';
+import { publicDemoAccounts } from '../services/demoService.js';
 import * as auth from '../controllers/authController.js';
 import * as analytics from '../controllers/analyticsController.js';
 import * as data from '../controllers/dataController.js';
@@ -26,6 +27,12 @@ router.get('/health', (_req, res) => res.json({ success: true, data: { status: '
 router.post('/auth/login', authLimiter, validate(s.loginSchema), h(auth.login));
 router.post('/auth/refresh', h(auth.refresh));
 router.post('/auth/logout', h(auth.logout));
+// Demo role cards for the login page — passwords come from env vars, never from frontend code
+router.get('/auth/demo-accounts', (_req, res) => res.json({ success: true, data: { enabled: env.demoLoginEnabled, accounts: publicDemoAccounts() } }));
+
+// Password change lives under /auth so the refresh cookie (Path=/api/auth) accompanies it and the
+// current device's session can be preserved while every other device is signed out.
+router.patch('/auth/password', authenticate, authLimiter, validate(s.changePasswordSchema), h(account.changePassword));
 
 // Everything below requires a valid access token
 router.use(authenticate);
@@ -70,7 +77,7 @@ router.get('/reports/:type', validate(s.reportQuery, 'query'), h(reports.report)
 // ---- profile
 router.get('/profile', h(account.getProfile));
 router.patch('/profile', validate(s.updateProfileSchema), h(account.updateProfile));
-router.patch('/profile/password', validate(s.changePasswordSchema), h(account.changePassword));
+router.patch('/profile/password', authLimiter, validate(s.changePasswordSchema), h(account.changePassword)); // legacy alias (cookie not sent here → signs out all devices)
 
 // ---- settings & team
 router.get('/settings', h(account.getSettings));

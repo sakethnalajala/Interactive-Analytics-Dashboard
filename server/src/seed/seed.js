@@ -13,6 +13,7 @@ import { Product, CATEGORIES } from '../models/Product.js';
 import { Order, REVENUE_STATUSES, PAYMENT_METHODS, CHANNELS } from '../models/Order.js';
 import { Session, FUNNEL_STAGES, DEVICES, SOURCES } from '../models/Session.js';
 import { Setting } from '../models/Setting.js';
+import { DEMO_ACCOUNTS, demoPasswordFor } from '../services/demoService.js';
 
 faker.seed(42);
 
@@ -68,15 +69,15 @@ const PRICE_RANGE = { Electronics: [49, 399], Apparel: [25, 180], 'Home & Living
 const CATEGORY_WEIGHT = { Electronics: 0.22, Apparel: 0.2, 'Home & Living': 0.14, Beauty: 0.12, Sports: 0.1, Books: 0.08, Toys: 0.07, Grocery: 0.07 };
 
 async function seedUsers() {
-  const demo = [
-    ['Saketh Nalajala', 'superadmin@demo.com', 'super_admin', 'Head of Analytics'],
-    ['Priya Raman', 'admin@demo.com', 'admin', 'Operations Manager'],
-    ['Daniel Okafor', 'analyst@demo.com', 'analyst', 'Data Analyst'],
-    ['Emma Laurent', 'viewer@demo.com', 'viewer', 'Marketing Associate'],
-  ];
-  const hash = await User.hashPassword('Password123');
-  await User.insertMany(demo.map(([name, email, role, jobTitle], i) => ({ name, email, role, jobTitle, passwordHash: hash, avatarColor: PALETTE[i], lastLoginAt: new Date(TODAY - i * DAY) })));
-  return demo;
+  // Passwords come from DEMO_PASSWORD_* env vars (dev fallback: Password123) — see services/demoService.js
+  const docs = [];
+  for (const [i, a] of DEMO_ACCOUNTS.entries()) {
+    const password = demoPasswordFor(a.role);
+    if (!password) throw new Error(`No password configured for demo role ${a.role} (set ${a.envKey})`);
+    docs.push({ name: a.name, email: a.email, role: a.role, jobTitle: a.jobTitle, passwordHash: await User.hashPassword(password), avatarColor: PALETTE[i], lastLoginAt: new Date(TODAY - i * DAY) });
+  }
+  await User.insertMany(docs);
+  return DEMO_ACCOUNTS.map((a) => [a.name, a.email, a.role]);
 }
 
 async function seedProducts() {

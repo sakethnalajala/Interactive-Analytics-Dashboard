@@ -1,10 +1,12 @@
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { app } from './app.js';
+import { syncDemoPasswords } from './services/demoService.js';
 
 async function start() {
   await connectDB();
   console.log(`✔ MongoDB connected`);
+  await syncDemoPasswords();
   const server = app.listen(env.PORT, () => {
     console.log(`✔ API listening on http://localhost:${env.PORT}/api  (${env.NODE_ENV})`);
   });

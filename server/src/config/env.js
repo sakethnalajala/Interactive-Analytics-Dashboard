@@ -12,7 +12,22 @@ const schema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL_DAYS: z.coerce.number().default(7),
   CLIENT_URL: z.string().default('http://localhost:5180'),
+  // Demo accounts (see services/demoService.js). Passwords are optional: when set they are
+  // synced into the database at start-up and published to the login page's demo cards.
+  DEMO_LOGIN_ENABLED: z.enum(['true', 'false']).default('true'),
+  DEMO_PASSWORD_SUPER_ADMIN: z.string().min(8).max(128).optional(),
+  DEMO_PASSWORD_ADMIN: z.string().min(8).max(128).optional(),
+  DEMO_PASSWORD_ANALYST: z.string().min(8).max(128).optional(),
+  DEMO_PASSWORD_VIEWER: z.string().min(8).max(128).optional(),
 });
+
+/**
+ * Origins that are always allowed in addition to CLIENT_URL: local dev servers and this
+ * project's own Vercel deployments (Vercel gives every deployment a new hostname under the
+ * project prefix, so a fixed CLIENT_URL alone cannot keep up). Update the prefix if the
+ * Vercel project is renamed.
+ */
+const TRUSTED_ORIGINS = ['http://localhost:5180', 'http://localhost:4173', 'https://interactive-analytics-dashboard-client-kkut*.vercel.app'];
 
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
@@ -29,9 +44,14 @@ export const env = {
   // Comma-separated origins. Trailing slashes/paths are stripped and matching is
   // case-insensitive because a browser Origin header is always just scheme://host[:port].
   // A "*" wildcard is allowed in the host, e.g. https://my-app-*.vercel.app for previews.
-  clientOrigins: parsed.data.CLIENT_URL.split(',')
-    .map((s) => s.trim().toLowerCase().replace(/^([a-z]+:\/\/[^/]+).*$/, '$1'))
-    .filter(Boolean),
+  clientOrigins: [
+    ...new Set(
+      [...parsed.data.CLIENT_URL.split(','), ...TRUSTED_ORIGINS]
+        .map((s) => s.trim().toLowerCase().replace(/^([a-z]+:\/\/[^/]+).*$/, '$1'))
+        .filter(Boolean),
+    ),
+  ],
+  demoLoginEnabled: parsed.data.DEMO_LOGIN_ENABLED === 'true',
 };
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

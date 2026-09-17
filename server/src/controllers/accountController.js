@@ -1,6 +1,7 @@
 import { User, ROLES } from '../models/User.js';
 import { Setting } from '../models/Setting.js';
 import { ApiError } from '../utils/ApiError.js';
+import { verifyRefreshToken, REFRESH_COOKIE } from '../utils/tokens.js';
 
 const ok = (res, data, status = 200) => res.status(status).json({ success: true, data });
 
@@ -21,9 +22,19 @@ export async function changePassword(req, res) {
   const user = await User.findById(req.user._id).select('+passwordHash +refreshTokens');
   if (!(await user.comparePassword(req.body.currentPassword))) throw ApiError.badRequest('Current password is incorrect', [{ path: 'currentPassword', message: 'Incorrect password' }]);
   user.passwordHash = await User.hashPassword(req.body.newPassword);
-  user.refreshTokens = []; // sign out every other device
+  // Sign out every other device but keep this one: only the refresh token presented by this browser survives.
+  const currentJti = currentRefreshJti(req);
+  user.refreshTokens = user.refreshTokens.filter((t) => currentJti && t.jti === currentJti);
   await user.save();
   ok(res, { message: 'Password updated. Other devices have been signed out.' });
+}
+
+function currentRefreshJti(req) {
+  try {
+    return verifyRefreshToken(req.cookies?.[REFRESH_COOKIE]).jti;
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------- settings
