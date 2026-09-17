@@ -12,9 +12,12 @@ describe('built-in trusted origins', () => {
     expect(isAllowedOrigin('https://interactive-analytics-dashboard-client-kkut.vercel.app')).toBe(true);
     expect(isAllowedOrigin('https://interactive-analytics-dashboard-client-kkut-git-main-team.vercel.app')).toBe(true);
     expect(isAllowedOrigin('http://localhost:5180')).toBe(true);
+    // the current production project (Vercel auto-suffixed the name) and its per-deployment hosts
+    expect(isAllowedOrigin('https://interactive-analytics-dashboard-cli-ivory.vercel.app')).toBe(true);
+    expect(isAllowedOrigin('https://interactive-analytics-dashboard-cli-9f8e7d6c5-sakeths-projects.vercel.app')).toBe(true);
   });
   it('still rejects unrelated origins', () => {
-    expect(isAllowedOrigin('https://interactive-analytics-dashboard-client.vercel.app')).toBe(false);
+    expect(isAllowedOrigin('https://interactive-analytics-dashboard.vercel.app')).toBe(false); // no dash-suffix → not this family
     expect(isAllowedOrigin('https://evil.vercel.app')).toBe(false);
     expect(isAllowedOrigin('https://interactive-analytics-dashboard-client-kkut.vercel.app.evil.com')).toBe(false);
   });

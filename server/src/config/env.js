@@ -23,11 +23,12 @@ const schema = z.object({
 
 /**
  * Origins that are always allowed in addition to CLIENT_URL: local dev servers and this
- * project's own Vercel deployments (Vercel gives every deployment a new hostname under the
- * project prefix, so a fixed CLIENT_URL alone cannot keep up). Update the prefix if the
- * Vercel project is renamed.
+ * project's own Vercel deployments. Vercel gives every deployment a new hostname under the
+ * project name (and suffixes the name itself when it collides, e.g. -cli-ivory), so a fixed
+ * CLIENT_URL alone cannot keep up. The pattern covers every project named
+ * interactive-analytics-dashboard-<anything>; update it if the project is renamed.
  */
-const TRUSTED_ORIGINS = ['http://localhost:5180', 'http://localhost:4173', 'https://interactive-analytics-dashboard-client-kkut*.vercel.app'];
+const TRUSTED_ORIGINS = ['http://localhost:5180', 'http://localhost:4173', 'https://interactive-analytics-dashboard-*.vercel.app'];
 
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
